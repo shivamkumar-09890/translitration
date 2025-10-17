@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+.env
+.venv/
+env/
+venv/
+
+# Jupyter notebooks
+.ipynb_checkpoints/
+
+# Logs and checkpoints
+*.log
+*.out
+*.err
+*.pth
+*.pt
+*.ckpt
+checkpoints/
+experiments/runs/
+
+# Data (ignore large raw data, keep vocab & samples)
+data/raw/
+!data/raw/README.md
+data/processed/
+!data/processed/README.md
+
+# System files
+.DS_Store
+Thumbs.db
