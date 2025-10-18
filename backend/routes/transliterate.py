@@ -2,6 +2,7 @@ from backend.services.inference import transliterate_word
 from pydantic import BaseModel
 from fastapi import APIRouter, HTTPException
 from backend.services.llm import transliterate_to_devanagari
+from backend.services.inference_lstm import predict, src_char2idx, tgt_idx2char, DEVICE, model
 
 router = APIRouter(prefix="/api", tags=["Transliteration"])
 
@@ -32,3 +33,17 @@ async def transliterate_llm(req: TransliterationRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error during transliteration: {e}")
+
+@router.post("/transliterate_lstm", response_model=TransliterationResponse)
+def transliterate_lstm(req: TransliterationRequest):
+    """
+    Receives a word in Roman script and returns its Devanagari transliteration using the trained LSTM model.
+    """
+    try:
+        output_word = predict(model, req.input_word, src_char2idx, tgt_idx2char)
+        if not output_word:
+            raise HTTPException(status_code=500, detail="Failed to transliterate the word using LSTM.")
+        return {"input": req.input_word, "output": output_word}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during LSTM transliteration: {e}")

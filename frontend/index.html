@@ -85,6 +85,11 @@
       color: #d64545;
     }
 
+    .card.lstm {
+      background: #f4fff4;
+      color: #2e7d32;
+    }
+
     .label {
       font-size: 14px;
       font-weight: 500;
@@ -103,6 +108,7 @@
     <div class="output">
       <div class="card" id="transformerOutput"></div>
       <div class="card llm" id="llmOutput"></div>
+      <div class="card lstm" id="lstmOutput"></div>
     </div>
   </div>
 
@@ -113,8 +119,8 @@
 
       document.getElementById('transformerOutput').innerText = 'Loading...';
       document.getElementById('llmOutput').innerText = 'Loading...';
+      document.getElementById('lstmOutput').innerText = 'Loading...';
 
-      // Parallel API calls for faster response
       const transformerPromise = fetch('/api/transliterate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -127,15 +133,23 @@
         body: JSON.stringify({ input_word: inputWord })
       }).then(res => res.json());
 
+      const lstmPromise = fetch('/api/transliterate_lstm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input_word: inputWord })
+      }).then(res => res.json());
+
       try {
-        const [transformerData, llmData] = await Promise.all([transformerPromise, llmPromise]);
+        const [transformerData, llmData, lstmData] = await Promise.all([transformerPromise, llmPromise, lstmPromise]);
 
         document.getElementById('transformerOutput').innerHTML = `<span class="label">Trained Transformer Output:</span> ${transformerData.output}`;
         document.getElementById('llmOutput').innerHTML = `<span class="label">LLM Output:</span> ${llmData.output}`;
+        document.getElementById('lstmOutput').innerHTML = `<span class="label">LSTM Output:</span> ${lstmData.output}`;
       } catch (err) {
         console.error(err);
         document.getElementById('transformerOutput').innerText = 'Error: Could not transliterate (Transformer)';
         document.getElementById('llmOutput').innerText = 'Error: Could not transliterate (LLM)';
+        document.getElementById('lstmOutput').innerText = 'Error: Could not transliterate (LSTM)';
       }
     }
   </script>
