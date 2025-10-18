@@ -1,3 +1,5 @@
+import random
+import numpy as np
 import torch
 import os
 from torch.nn.utils.rnn import pad_sequence
@@ -113,3 +115,12 @@ def load_model(checkpoint_path: str):
             return output_ids
 
     return ModelWrapper(model, tgt_idx2char)
+
+def set_seed(seed: int = 42):
+    """Fix random seeds for reproducibility."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
