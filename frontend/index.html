@@ -3,57 +3,139 @@
 <head>
   <meta charset="UTF-8">
   <title>Roman → Devanagari Transliteration</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      margin: 50px;
-      max-width: 600px;
+      font-family: 'Roboto', sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding-top: 50px;
     }
-    input, button {
-      padding: 8px;
-      font-size: 16px;
+
+    .container {
+      background: #fff;
+      border-radius: 15px;
+      padding: 30px 40px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
     }
-    button {
-      margin-left: 10px;
-    }
-    #output {
-      margin-top: 20px;
-      font-weight: bold;
-      font-size: 20px;
+
+    h2 {
+      text-align: center;
       color: #333;
+      margin-bottom: 30px;
+    }
+
+    input[type="text"] {
+      width: calc(100% - 110px);
+      padding: 12px 15px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      transition: border 0.3s;
+    }
+
+    input[type="text"]:focus {
+      border-color: #4a90e2;
+    }
+
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(45deg, #4a90e2, #50e3c2);
+      color: #fff;
+      cursor: pointer;
+      margin-left: 10px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    }
+
+    .output {
+      margin-top: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .card {
+      padding: 15px 20px;
+      border-radius: 10px;
+      background: #f0f4ff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      font-size: 18px;
+      color: #333;
+      transition: transform 0.2s;
+    }
+
+    .card.llm {
+      background: #fff4f4;
+      color: #d64545;
+    }
+
+    .label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #666;
     }
   </style>
 </head>
 <body>
-  <h2>Roman → Devanagari Transliteration</h2>
-  <input type="text" id="inputWord" placeholder="Type a Roman word..." />
-  <button onclick="transliterate()">Transliterate</button>
+  <div class="container">
+    <h2>Roman → Devanagari Transliteration</h2>
+    <div style="display: flex;">
+      <input type="text" id="inputWord" placeholder="Type a Roman word..." />
+      <button onclick="transliterate()">Transliterate</button>
+    </div>
 
-  <div id="output"></div>
+    <div class="output">
+      <div class="card" id="transformerOutput"></div>
+      <div class="card llm" id="llmOutput"></div>
+    </div>
+  </div>
 
   <script>
     async function transliterate() {
       const inputWord = document.getElementById('inputWord').value.trim();
       if (!inputWord) return;
 
+      document.getElementById('transformerOutput').innerText = 'Loading...';
+      document.getElementById('llmOutput').innerText = 'Loading...';
+
+      // Parallel API calls for faster response
+      const transformerPromise = fetch('/api/transliterate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input_word: inputWord })
+      }).then(res => res.json());
+
+      const llmPromise = fetch('/api/transliterate_llm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input_word: inputWord })
+      }).then(res => res.json());
+
       try {
-        const response = await fetch('/api/transliterate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ input_word: inputWord })
-        });
+        const [transformerData, llmData] = await Promise.all([transformerPromise, llmPromise]);
 
-        if (!response.ok) {
-          throw new Error('Server error');
-        }
-
-        const data = await response.json();
-        document.getElementById('output').innerText = `Output: ${data.output}`;
+        document.getElementById('transformerOutput').innerHTML = `<span class="label">Trained Transformer Output:</span> ${transformerData.output}`;
+        document.getElementById('llmOutput').innerHTML = `<span class="label">LLM Output:</span> ${llmData.output}`;
       } catch (err) {
         console.error(err);
-        document.getElementById('output').innerText = 'Error: Could not transliterate';
+        document.getElementById('transformerOutput').innerText = 'Error: Could not transliterate (Transformer)';
+        document.getElementById('llmOutput').innerText = 'Error: Could not transliterate (LLM)';
       }
     }
   </script>
