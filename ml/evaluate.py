@@ -147,113 +147,6 @@
 #     main()
 
 
-# import torch
-# from torch.utils.data import DataLoader
-# from ml.dataset import TransliterationDataset
-# from ml.vocab import load_vocab
-# from ml.models.transformer import TransformerSeq2Seq
-# from ml.utils import collate_fn
-# from ml.logger import get_logger
-# from ml.config import *
-
-# # -------------------------
-# # Logger
-# # -------------------------
-# logger = get_logger("check_example")
-
-# # -------------------------
-# # Load vocab
-# # -------------------------
-# logger.info("Loading vocab...")
-# src_char2idx, src_idx2char = load_vocab("src")
-# tgt_char2idx, tgt_idx2char = load_vocab("tgt")
-
-# SRC_VOCAB_SIZE = len(src_char2idx)
-# TGT_VOCAB_SIZE = len(tgt_char2idx)
-# logger.info(f"Loaded vocab - SRC: {SRC_VOCAB_SIZE}, TGT: {TGT_VOCAB_SIZE}")
-
-# # -------------------------
-# # Load test dataset
-# # -------------------------
-# logger.info(f"Loading test dataset from {PROCESSED_TEST}...")
-# test_dataset = TransliterationDataset(PROCESSED_TEST)
-
-# # Take first 40 examples
-# num_examples = 40
-# examples = [test_dataset[i] for i in range(num_examples)]
-# logger.info(f"Loaded {len(examples)} examples for inspection")
-
-# # -------------------------
-# # Load trained model (epoch 20)
-# # -------------------------
-# checkpoint_path = "experiments/runs/transformer_epoch20.pth"
-# logger.info(f"Loading trained model from {checkpoint_path}...")
-# model = TransformerSeq2Seq(
-#     src_vocab_size=SRC_VOCAB_SIZE,
-#     tgt_vocab_size=TGT_VOCAB_SIZE,
-#     d_model=D_MODEL,
-#     nhead=NHEAD,
-#     num_encoder_layers=NUM_ENCODER_LAYERS,
-#     num_decoder_layers=NUM_DECODER_LAYERS,
-#     dim_feedforward=DIM_FEEDFORWARD,
-#     dropout=DROPOUT,
-#     max_len=MAX_LEN,
-# ).to(DEVICE)
-
-# checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
-# model.load_state_dict(checkpoint["model_state_dict"])
-# model.eval()
-# logger.info("Model loaded and set to evaluation mode")
-
-# # -------------------------
-# # Greedy decode function
-# # -------------------------
-# def greedy_decode(model, src_seq, max_len=MAX_LEN):
-#     src_seq = src_seq.unsqueeze(0).to(DEVICE)  # (1, seq_len)
-#     memory = model.encode(src_seq)
-
-#     ys = torch.tensor([[SOS_IDX]], device=DEVICE)
-
-#     for _ in range(max_len):
-#         tgt_mask = torch.nn.Transformer.generate_square_subsequent_mask(ys.size(1)).to(DEVICE)
-#         out = model.decode(ys, memory, tgt_mask=tgt_mask)
-#         out = model.fc_out(out[:, -1])
-#         next_token = out.argmax(-1).unsqueeze(0)
-#         ys = torch.cat([ys, next_token], dim=1)
-#         if next_token.item() == EOS_IDX:
-#             break
-
-#     return ys.squeeze(0).tolist()
-
-# # -------------------------
-# # Inspect outputs and compute accuracy
-# # -------------------------
-# logger.info("Inspecting model outputs for selected examples and computing accuracy...")
-
-# correct_count = 0
-# for idx, example in enumerate(examples, 1):
-#     src_seq = torch.tensor(example["source"], dtype=torch.long)
-#     tgt_seq = example["target"]
-
-#     pred_indices = greedy_decode(model, src_seq)
-    
-#     # Convert indices to chars
-#     pred_chars = [tgt_idx2char[i] for i in pred_indices[1:] if i != EOS_IDX]
-#     tgt_chars = [tgt_idx2char[i.item()] for i in tgt_seq[1:] if i.item() != EOS_IDX]
-#     src_chars = [src_idx2char[i.item()] for i in src_seq]  # Roman input
-
-#     is_correct = pred_chars == tgt_chars
-#     if is_correct:
-#         correct_count += 1
-
-#     logger.info(f"Example {idx}:")
-#     logger.info(f"Source (Roman):       {''.join(src_chars)}")
-#     logger.info(f"Target (Devanagari): {''.join(tgt_chars)}")
-#     logger.info(f"Predicted Output:     {''.join(pred_chars)}")
-#     logger.info(f"Correct Match:        {is_correct}")
-
-# accuracy = correct_count / len(examples) * 100
-# logger.info(f"Exact match accuracy on first {num_examples} examples: {accuracy:.2f}%")
 import torch
 from torch.utils.data import DataLoader
 from ml.dataset import TransliterationDataset
@@ -266,7 +159,7 @@ from ml.config import *
 # -------------------------
 # Logger
 # -------------------------
-logger = get_logger("check_train_example")
+logger = get_logger("check_example")
 
 # -------------------------
 # Load vocab
@@ -280,15 +173,15 @@ TGT_VOCAB_SIZE = len(tgt_char2idx)
 logger.info(f"Loaded vocab - SRC: {SRC_VOCAB_SIZE}, TGT: {TGT_VOCAB_SIZE}")
 
 # -------------------------
-# Load train dataset
+# Load test dataset
 # -------------------------
-logger.info(f"Loading train dataset from {PROCESSED_TRAIN}...")
-train_dataset = TransliterationDataset(PROCESSED_TRAIN)
+logger.info(f"Loading test dataset from {PROCESSED_TEST}...")
+test_dataset = TransliterationDataset(PROCESSED_TEST)
 
-# Take first 20 examples (can change to 40 if you want)
+# Take first 40 examples
 num_examples = 40
-examples = [train_dataset[i] for i in range(num_examples)]
-logger.info(f"Loaded {len(examples)} examples for inspection from train set")
+examples = [test_dataset[i] for i in range(num_examples)]
+logger.info(f"Loaded {len(examples)} examples for inspection")
 
 # -------------------------
 # Load trained model (epoch 20)
@@ -335,7 +228,7 @@ def greedy_decode(model, src_seq, max_len=MAX_LEN):
 # -------------------------
 # Inspect outputs and compute accuracy
 # -------------------------
-logger.info("Inspecting model outputs for selected train examples and computing accuracy...")
+logger.info("Inspecting model outputs for selected examples and computing accuracy...")
 
 correct_count = 0
 for idx, example in enumerate(examples, 1):
@@ -347,7 +240,7 @@ for idx, example in enumerate(examples, 1):
     # Convert indices to chars
     pred_chars = [tgt_idx2char[i] for i in pred_indices[1:] if i != EOS_IDX]
     tgt_chars = [tgt_idx2char[i.item()] for i in tgt_seq[1:] if i.item() != EOS_IDX]
-    src_chars = [src_idx2char[i.item()] for i in src_seq]
+    src_chars = [src_idx2char[i.item()] for i in src_seq]  # Roman input
 
     is_correct = pred_chars == tgt_chars
     if is_correct:
@@ -360,4 +253,111 @@ for idx, example in enumerate(examples, 1):
     logger.info(f"Correct Match:        {is_correct}")
 
 accuracy = correct_count / len(examples) * 100
-logger.info(f"Exact match accuracy on first {num_examples} train examples: {accuracy:.2f}%")
+logger.info(f"Exact match accuracy on first {num_examples} examples: {accuracy:.2f}%")
+# import torch
+# from torch.utils.data import DataLoader
+# from ml.dataset import TransliterationDataset
+# from ml.vocab import load_vocab
+# from ml.models.transformer import TransformerSeq2Seq
+# from ml.utils import collate_fn
+# from ml.logger import get_logger
+# from ml.config import *
+
+# # -------------------------
+# # Logger
+# # -------------------------
+# logger = get_logger("check_train_example")
+
+# # -------------------------
+# # Load vocab
+# # -------------------------
+# logger.info("Loading vocab...")
+# src_char2idx, src_idx2char = load_vocab("src")
+# tgt_char2idx, tgt_idx2char = load_vocab("tgt")
+
+# SRC_VOCAB_SIZE = len(src_char2idx)
+# TGT_VOCAB_SIZE = len(tgt_char2idx)
+# logger.info(f"Loaded vocab - SRC: {SRC_VOCAB_SIZE}, TGT: {TGT_VOCAB_SIZE}")
+
+# # -------------------------
+# # Load train dataset
+# # -------------------------
+# logger.info(f"Loading train dataset from {PROCESSED_TRAIN}...")
+# train_dataset = TransliterationDataset(PROCESSED_TRAIN)
+
+# # Take first 20 examples (can change to 40 if you want)
+# num_examples = 40
+# examples = [train_dataset[i] for i in range(num_examples)]
+# logger.info(f"Loaded {len(examples)} examples for inspection from train set")
+
+# # -------------------------
+# # Load trained model (epoch 20)
+# # -------------------------
+# checkpoint_path = "experiments/runs/transformer_epoch20.pth"
+# logger.info(f"Loading trained model from {checkpoint_path}...")
+# model = TransformerSeq2Seq(
+#     src_vocab_size=SRC_VOCAB_SIZE,
+#     tgt_vocab_size=TGT_VOCAB_SIZE,
+#     d_model=D_MODEL,
+#     nhead=NHEAD,
+#     num_encoder_layers=NUM_ENCODER_LAYERS,
+#     num_decoder_layers=NUM_DECODER_LAYERS,
+#     dim_feedforward=DIM_FEEDFORWARD,
+#     dropout=DROPOUT,
+#     max_len=MAX_LEN,
+# ).to(DEVICE)
+
+# checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
+# model.load_state_dict(checkpoint["model_state_dict"])
+# model.eval()
+# logger.info("Model loaded and set to evaluation mode")
+
+# # -------------------------
+# # Greedy decode function
+# # -------------------------
+# def greedy_decode(model, src_seq, max_len=MAX_LEN):
+#     src_seq = src_seq.unsqueeze(0).to(DEVICE)  # (1, seq_len)
+#     memory = model.encode(src_seq)
+
+#     ys = torch.tensor([[SOS_IDX]], device=DEVICE)
+
+#     for _ in range(max_len):
+#         tgt_mask = torch.nn.Transformer.generate_square_subsequent_mask(ys.size(1)).to(DEVICE)
+#         out = model.decode(ys, memory, tgt_mask=tgt_mask)
+#         out = model.fc_out(out[:, -1])
+#         next_token = out.argmax(-1).unsqueeze(0)
+#         ys = torch.cat([ys, next_token], dim=1)
+#         if next_token.item() == EOS_IDX:
+#             break
+
+#     return ys.squeeze(0).tolist()
+
+# # -------------------------
+# # Inspect outputs and compute accuracy
+# # -------------------------
+# logger.info("Inspecting model outputs for selected train examples and computing accuracy...")
+
+# correct_count = 0
+# for idx, example in enumerate(examples, 1):
+#     src_seq = torch.tensor(example["source"], dtype=torch.long)
+#     tgt_seq = example["target"]
+
+#     pred_indices = greedy_decode(model, src_seq)
+    
+#     # Convert indices to chars
+#     pred_chars = [tgt_idx2char[i] for i in pred_indices[1:] if i != EOS_IDX]
+#     tgt_chars = [tgt_idx2char[i.item()] for i in tgt_seq[1:] if i.item() != EOS_IDX]
+#     src_chars = [src_idx2char[i.item()] for i in src_seq]
+
+#     is_correct = pred_chars == tgt_chars
+#     if is_correct:
+#         correct_count += 1
+
+#     logger.info(f"Example {idx}:")
+#     logger.info(f"Source (Roman):       {''.join(src_chars)}")
+#     logger.info(f"Target (Devanagari): {''.join(tgt_chars)}")
+#     logger.info(f"Predicted Output:     {''.join(pred_chars)}")
+#     logger.info(f"Correct Match:        {is_correct}")
+
+# accuracy = correct_count / len(examples) * 100
+# logger.info(f"Exact match accuracy on first {num_examples} train examples: {accuracy:.2f}%")
