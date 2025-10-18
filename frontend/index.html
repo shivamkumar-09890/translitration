@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Roman → Devanagari Transliteration</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 50px;
+      max-width: 600px;
+    }
+    input, button {
+      padding: 8px;
+      font-size: 16px;
+    }
+    button {
+      margin-left: 10px;
+    }
+    #output {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 20px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h2>Roman → Devanagari Transliteration</h2>
+  <input type="text" id="inputWord" placeholder="Type a Roman word..." />
+  <button onclick="transliterate()">Transliterate</button>
+
+  <div id="output"></div>
+
+  <script>
+    async function transliterate() {
+      const inputWord = document.getElementById('inputWord').value.trim();
+      if (!inputWord) return;
+
+      try {
+        const response = await fetch('/api/transliterate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ input_word: inputWord })
+        });
+
+        if (!response.ok) {
+          throw new Error('Server error');
+        }
+
+        const data = await response.json();
+        document.getElementById('output').innerText = `Output: ${data.output}`;
+      } catch (err) {
+        console.error(err);
+        document.getElementById('output').innerText = 'Error: Could not transliterate';
+      }
+    }
+  </script>
+</body>
+</html>
